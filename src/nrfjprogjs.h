@@ -76,7 +76,7 @@ private:
 
     static NAN_METHOD(Program); // Params: serialnumber, filename, options {verify, chip_erase_mode, qspi_erase_mode, reset}, callback(error)
     static NAN_METHOD(ReadToFile); // Params: serialnumber, filename, options {readram, readcode, readuicr, readqspi}, callback(error)
-    static NAN_METHOD(Verify); // Params: serialnumber, filename, callback(error)
+    static NAN_METHOD(Verify); // Params: serialnumber, filename, options {}, callback(error)
     static NAN_METHOD(Erase); // Params: serialnumber, options {erasse_mode, start_address, end_address}, callback(error)
 
     static NAN_METHOD(Recover); // Params: serialnumber, callback(error)
@@ -99,7 +99,7 @@ private:
 
     static void logCallback(const char * msg);
     static void log(std::string msg);
-    
+
     static void progressCallback(const char * process);
     static Nan::Callback *jsProgressCallback;
     static void sendProgress(uv_async_t *handle);
