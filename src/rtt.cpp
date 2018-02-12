@@ -113,6 +113,7 @@ void RTT::init(v8::Local<v8::FunctionTemplate> tpl)
     Nan::SetPrototypeMethod(tpl, "stop", Stop);
 
     Nan::SetPrototypeMethod(tpl, "read", Read);
+    Nan::SetPrototypeMethod(tpl, "readWait", ReadWait);
     Nan::SetPrototypeMethod(tpl, "write", Write);
 }
 
@@ -407,6 +408,7 @@ NAN_METHOD(RTT::Start)
         StartOptions options(startOptions);
         baton->hasControlBlockLocation = options.hasControlBlockLocation;
         baton->controlBlockLocation = options.controlBlockLocation;
+        baton->resetOnStart = options.resetOnStart;
         argumentCount++;
 
         return baton;
@@ -573,6 +575,56 @@ NAN_METHOD(RTT::Read)
 
     rtt_return_function_t r = [&] (RTTBaton *b) -> std::vector<v8::Local<v8::Value>> {
         auto baton = static_cast<RTTReadBaton*>(b);
+
+        std::vector<v8::Local<v8::Value>> returnData;
+
+        returnData.push_back(Convert::toJsString(baton->data.data(), baton->length));
+        returnData.push_back(Convert::toJsValueArray((uint8_t *)baton->data.data(), baton->length));
+        returnData.push_back(Convert::toTimeDifferenceUS(rttStartTime, baton->functionStart));
+
+        return returnData;
+    };
+
+    CallFunction(info, p, e, r);
+}
+
+NAN_METHOD(RTT::ReadWait)
+{
+    rtt_parse_parameters_function_t p = [&] (Nan::NAN_METHOD_ARGS_TYPE parameters, int &argumentCount) -> RTTBaton* {
+        auto baton = new RTTReadWaitBaton();
+
+        baton->channelIndex = Convert::getNativeUint32(info[argumentCount]);
+        argumentCount++;
+
+        baton->length = Convert::getNativeUint32(info[argumentCount]);
+        argumentCount++;
+
+        return baton;
+    };
+
+    rtt_execute_function_t e = [&] (RTTBaton *b) -> RTTErrorcodes_t {
+        auto baton = static_cast<RTTReadWaitBaton*>(b);
+
+        if (!isStarted()) {
+            return RTTNotInitialized;
+        }
+
+        baton->data.resize(baton->length, 0);
+        uint32_t readLength = 0;
+
+        do {
+            baton->functionStart = std::chrono::high_resolution_clock::now();
+
+            RETURN_ERROR_ON_FAIL(dll_function.rtt_read(baton->channelIndex, baton->data.data(), baton->length, &readLength), RTTCouldNotCallFunction);
+        } while (readLength == 0);
+
+        baton->length = readLength;
+
+        return RTTSuccess;
+    };
+
+    rtt_return_function_t r = [&] (RTTBaton *b) -> std::vector<v8::Local<v8::Value>> {
+        auto baton = static_cast<RTTReadWaitBaton*>(b);
 
         std::vector<v8::Local<v8::Value>> returnData;
 

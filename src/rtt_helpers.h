@@ -68,6 +68,7 @@ public:
 
     uint32_t controlBlockLocation;
     bool hasControlBlockLocation;
+    bool resetOnStart;
 };
 
 #endif

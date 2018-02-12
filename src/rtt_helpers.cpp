@@ -55,10 +55,16 @@ v8::Local<v8::Object> ChannelInfo::ToJs()
 StartOptions::StartOptions(v8::Local<v8::Object> obj)
 {
     hasControlBlockLocation = false;
+    resetOnStart = true;
 
     if (Utility::Has(obj, "controlBlockLocation"))
     {
         hasControlBlockLocation = true;
         controlBlockLocation = Convert::getNativeUint32(obj, "controlBlockLocation");
+    }
+
+    if (Utility::Has(obj, "resetOnStart"))
+    {
+        resetOnStart = Convert::getNativeUint32(obj, "resetOnStart");
     }
 }

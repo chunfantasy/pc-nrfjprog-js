@@ -72,6 +72,7 @@ private:
     static NAN_METHOD(Stop); // Params: callback(error)
 
     static NAN_METHOD(Read); // Params: channelIndex, callback(error, data, raw, time)
+    static NAN_METHOD(ReadWait); // Params: channelIndex, callback(error, data, raw, time)
     static NAN_METHOD(Write); // Params: channelIndex, data, callback(error, writtenlength, time)
 
     static void CallFunction(Nan::NAN_METHOD_ARGS_TYPE info,

@@ -90,6 +90,7 @@ public:
     uint32_t serialNumber;
     bool hasControlBlockLocation;
     uint32_t controlBlockLocation;
+    bool resetOnStart;
 
     uint32_t clockSpeed;
     device_family_t family;
@@ -109,6 +110,16 @@ class RTTReadBaton : public RTTBaton
 {
 public:
     RTTReadBaton() : RTTBaton("rtt read", 3) {}
+
+    uint32_t channelIndex;
+    uint32_t length;
+    std::vector<char> data;
+};
+
+class RTTReadWaitBaton : public RTTBaton
+{
+public:
+    RTTReadWaitBaton() : RTTBaton("rtt read wait", 3) {}
 
     uint32_t channelIndex;
     uint32_t length;

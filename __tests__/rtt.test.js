@@ -210,6 +210,67 @@ describe('RTT', () => {
         });
     });
 
+    describe.only('read with delay', () => {
+        beforeEach(done => {
+            const startCallback = (err, down, up) => {
+                expect(err).toBeUndefined();
+                expect(down).toBeDefined();
+                expect(up).toBeDefined();
+
+                done();
+            };
+
+            RTT.start(device.serialNumber, {}, startCallback);
+        });
+
+        afterEach(done => {
+            const stopCallback = (err) => {
+                expect(err).toBeUndefined();
+                done();
+            };
+
+            RTT.stop(stopCallback);
+        });
+
+        it('reads data immediately', done => {
+            const readLength = 5;
+            const readCallback = (err, data, raw) => {
+                expect(err).toBeUndefined();
+                expect(data.length).toBe(readLength);
+                expect(raw.length).toBe(readLength);
+
+                done();
+            };
+
+            RTT.readWait(0, readLength, readCallback);
+        });
+
+        it('reads data after a delay', done => {
+            const readLength = 5;
+            let writeTime = 0;
+            const readCallback = (err, data, raw, time) => {
+                expect(err).toBeUndefined();
+                expect(data.length).toBe(readLength);
+                expect(raw.length).toBe(readLength);
+
+                console.log(time, writeTime);
+
+                expect(time - writeTime).toBeGreaterThan(5000);
+
+                done();
+            };
+
+            const writeCallback = (err, length, time) => {
+                expect(err).toBeUndefined();
+                writeTime = time;
+
+                RTT.readWait(0, readLength, readCallback);
+            }
+
+            RTT.write(0, 'delay', writeCallback);
+        });
+    });
+
     describe('writes to device', () => {
         beforeEach(done => {
             const readCallback = (err, data, raw, time) => {
