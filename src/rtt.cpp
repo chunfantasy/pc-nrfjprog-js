@@ -616,6 +616,10 @@ NAN_METHOD(RTT::ReadWait)
             baton->functionStart = std::chrono::high_resolution_clock::now();
 
             RETURN_ERROR_ON_FAIL(dll_function.rtt_read(baton->channelIndex, baton->data.data(), baton->length, &readLength), RTTCouldNotCallFunction);
+
+            if (readLength == 0) {
+                std::this_thread::yield();
+            }
         } while (readLength == 0);
 
         baton->length = readLength;

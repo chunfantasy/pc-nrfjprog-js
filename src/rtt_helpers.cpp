@@ -65,6 +65,6 @@ StartOptions::StartOptions(v8::Local<v8::Object> obj)
 
     if (Utility::Has(obj, "resetOnStart"))
     {
-        resetOnStart = Convert::getNativeUint32(obj, "resetOnStart");
+        resetOnStart = Convert::getBool(obj, "resetOnStart");
     }
 }
