@@ -188,7 +188,7 @@
  * });
  *
  * @param {integer} serialNumber The serial number of the device to start RTT on
- * @param {StartOptions} startOptions A plain object containing options about how to start RTT
+ * @param {pc-nrfjprog-js.module:RTT~StartOptions} startOptions A plain object containing options about how to start RTT
  * @param {Function} callback A callback function to handle the async response.
  *   It shall expect three parameters: ({@link pc-nrfjprog-js.module:RTT~Error|Error}, Array of {@link pc-nrfjprog-js.module:RTT~ChannelInfo|ChannelInfo},
  *   Array of {@link pc-nrfjprog-js.module:RTT~ChannelInfo|ChannelInfo})

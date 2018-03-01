@@ -34,8 +34,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-const path = require('path');
-const nRFjprog = require('bindings')('pc-nrfjprog-js');
+import path from 'path';
+import * as rttStreams from './rtt-streams';
+import bindings from 'bindings';
+
+const nRFjprog = bindings('pc-nrfjprog-js');
 
 const instance = new nRFjprog.nRFjprog();
 Object.keys(nRFjprog).map(key => {
@@ -46,5 +49,14 @@ Object.keys(nRFjprog).map(key => {
     }
 });
 
-module.exports = instance;
-module.exports.RTT = new nRFjprog.RTT();
+
+instance.RTT = new nRFjprog.RTT();
+
+
+// instance.getRttReadStream = rttStreams.getRttReadStream(module.exports.RTT);
+// instance.getRttWriteStream = rttStreams.getRttWriteStream(module.exports.RTT);
+instance.getRttDuplexStream = rttStreams.getRttDuplexStream(module.exports.RTT);
+
+
+
+export default instance;
