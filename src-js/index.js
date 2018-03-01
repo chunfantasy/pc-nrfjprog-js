@@ -35,15 +35,25 @@
  */
 
 import path from 'path';
-import * as rttStreams from './rtt-streams';
 import bindings from 'bindings';
+
+import * as rttStreams from './rtt-streams';
+import Probe from './probe';
 
 const nRFjprog = bindings('pc-nrfjprog-js');
 
+
 const instance = new nRFjprog.nRFjprog();
+
+// console.log('nRFjprog instance: ', instance);
+
+
 Object.keys(nRFjprog).map(key => {
+
+//     console.log('Iterating through: ', key);
+
     if (key === 'setLibrarySearchPath') {
-        nRFjprog.setLibrarySearchPath(path.join(__dirname, 'nrfjprog', 'lib'));
+        nRFjprog.setLibrarySearchPath(path.join(__dirname, '..', 'nrfjprog', 'lib'));
     } else if (key !== 'nRFjprog') {
         instance[key] = nRFjprog[key];
     }
@@ -51,12 +61,13 @@ Object.keys(nRFjprog).map(key => {
 
 
 instance.RTT = new nRFjprog.RTT();
-
+instance.Probe = Probe;
 
 // instance.getRttReadStream = rttStreams.getRttReadStream(module.exports.RTT);
 // instance.getRttWriteStream = rttStreams.getRttWriteStream(module.exports.RTT);
 instance.getRttDuplexStream = rttStreams.getRttDuplexStream(module.exports.RTT);
 
+// console.log('nRFjprog instance: ', instance);
 
 
 export default instance;
