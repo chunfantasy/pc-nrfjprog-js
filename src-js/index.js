@@ -37,7 +37,7 @@
 import path from 'path';
 import bindings from 'bindings';
 
-import * as rttStreams from './rtt-streams';
+// import * as rttStreams from './rtt-streams';
 import Probe from './probe';
 
 const nRFjprog = bindings('pc-nrfjprog-js');
@@ -65,7 +65,7 @@ instance.Probe = Probe;
 
 // instance.getRttReadStream = rttStreams.getRttReadStream(module.exports.RTT);
 // instance.getRttWriteStream = rttStreams.getRttWriteStream(module.exports.RTT);
-instance.getRttDuplexStream = rttStreams.getRttDuplexStream(module.exports.RTT);
+// instance.getRttDuplexStream = rttStreams.getRttDuplexStream(module.exports.RTT);
 
 // console.log('nRFjprog instance: ', instance);
 

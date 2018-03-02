@@ -25,7 +25,7 @@ export default [
             { file: pkg.main, format: 'cjs', sourcemap: true },
 //             { file: pkg.module, format: 'es', sourcemap: true }
         ],
-        external: ['stream', 'path', 'bindings'],
+        external: ['stream', 'path', 'bindings', 'temp', 'sander'],
         plugins: [
             buble({
                 transforms: { forOf: false }
