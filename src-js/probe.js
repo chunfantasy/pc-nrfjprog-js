@@ -11,6 +11,27 @@ import {RttReadableStream} from './rtt-streams';
 temp.track();
 
 
+// Aux function to look for a channel index inside a channelInfo data
+// structure, and assert its direction.
+// Creates a closure over the desired channel index and direction, as to
+// make it shorter to call in the Promise chains of the get*RttStream methods.
+function assertChannelIndex(channelIndex, direction) {
+    return function(channelInfo) {
+        for (const i in channelInfo) {
+            if (channelIndex === channelInfo[i].channelIndex){
+    //             if (channelInfo[i].direction !== direction) {
+    //                 throw new Error(`Channel index ${channelIndex} is not an up channel`);
+    //             } else {
+                return channelIndex;
+    //             }
+            }
+        }
+        throw new Error(`Channel index ${channelIndex} does not exist`);
+    }
+}
+
+
+
 export default class Probe{
 
     constructor(serialnumber) {
@@ -127,28 +148,22 @@ export default class Probe{
         });
     }
 
-    getReadableRttStream(channelIndex, streamOptions = {}) {
+    _startRtt() {
+        /// TODO: implement RTT options for the start of the RTT block???
         return this._ready.then(()=>{
             return new Promise((res, rej)=>{
-                this._rtt.start(this._sn, streamOptions, (err, channelInfo)=>{
+                this._rtt.start(this._sn, {}, (err, channelInfo)=>{
                     if (err) { rej(err); }
                     else { res(channelInfo); }
                 })
             });
-        }).then((channelInfo)=>{
-            // Sanity checks: channel index must exist, and must be
-            // an "up" (probe to host) channel
-            for (const i in channelInfo) {
-                if (channelIndex === channelInfo[i].channelIndex){
-//                     if (channelInfo[i].direction !== this._rttUpDirection) {
-//                         throw new Error(`Channel index ${channelIndex} is not an up channel`);
-//                     } else {
-                        return channelIndex;
-//                     }
-                }
-            }
-            throw new Error(`Channel index ${channelIndex} does not exist`);
-        }).then((validChannelIndex)=>{
+        });
+    }
+
+    getReadableRttStream(channelIndex, streamOptions = {}) {
+        this._startRtt()
+        .then(assertChannelIndex(channelIndex, this._rttUpDirection))
+        .then((validChannelIndex)=>{
             return new RttReadableStream(this._rtt, this._sn, validChannelIndex, streamOptions);
         }).catch(err=>{
             return new Promise((res, rej)=>{
@@ -159,7 +174,35 @@ export default class Probe{
         });
     }
 
+    getWritableRttStream(channelIndex, streamOptions = {}) {
+        this._startRtt()
+        .then(assertChannelIndex(channelIndex, this._rttDownDirection))
+        .then((validChannelIndex)=>{
+            return new RttWritableStream(this._rtt, this._sn, validChannelIndex, streamOptions);
+        }).catch(err=>{
+            return new Promise((res, rej)=>{
+                this._rtt.stop(()=>{
+                    if (err) {rej(err); }
+                });
+            });
+        });
+    }
 
+    getDuplexRttStream(upChannelIndex, downChannelIndex, streamOptions = {}) {
+        this._startRtt()
+        .then((channelInfo)=>Promise.all([
+            assertChannelIndex(upChannelIndex, this._rttUpDirection)(channelInfo),
+            assertChannelIndex(downChannelIndex, this._rttDownDirection)(channelInfo)
+        ]).then(([validUpChannelIndex, validDownChannelIndex)=>{
+            return new RttWritableStream(this._rtt, this._sn, validUpChannelIndex, validDownChannelIndex, streamOptions);
+        }).catch(err=>{
+            return new Promise((res, rej)=>{
+                this._rtt.stop(()=>{
+                    if (err) {rej(err); }
+                });
+            });
+        });
+    }
 }
 
 
