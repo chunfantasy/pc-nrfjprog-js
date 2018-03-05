@@ -8,7 +8,59 @@ const debugWrite = debug('rttWritable');
 const debugDuplex = debug('rttDuplex');
 
 
-export class RttReadableStream extends Readable {
+
+function readableMixIn(BaseClass) {
+    return class extends BaseClass {
+        _read(size) {
+    //         this._debug('called _read');
+    //         if (this._rttIsStarted) {
+                this._rttBindings.read(this._upChannel, size, (err, chars, bytes, i)=>{
+                    if (err) {
+                        this._debug('rtt.read returned error', err);
+                        this.emit(err);
+                        this._readTimeout = undefined;
+                    } else if (chars.length) {
+                        const unchoked = this.push(chars);
+                        this._debug(`rtt.read returned ${chars.length} characters: ${chars.toString()}, unchoked: ${unchoked} integer 0x${i.toString(16).padStart(8,'0')}`);
+                        this._readTimeout = undefined;
+                    } else {
+    //                     this._debug(`rtt.read returned 0 characters`);
+                        if (this._readTimeout) {
+                            clearTimeout(this._timeout);
+                        }
+                        this._readTimeout = setTimeout(()=>{this._read(size)}, 5);
+                    }
+                });
+    //         } else if (this._rttCouldNotStart) {
+    //             this.emit('error', 'RTT could not start, reading is not possible.');
+    //             // Not calling this.push() here, therefore this Stream will hang up.
+    //             // This is the expected behaviour when RTT failed to start.
+    //         } else {
+    //             // If RTT is not yet started, wait a bit and retry.
+    //             setTimeout(this._read.bind(this), 50);
+    //         }
+        }
+
+        _destroy(err, callback) {
+            if (this._readTimeout) {
+                clearTimeout(this._timeout);
+            }
+            this._rttBindings.stop(callback);
+        }
+    }
+
+}
+
+function writableMixIn(BaseClass) {
+    return class extends BaseClass {
+        _write(chunk, encoding, callback) {
+//             debugger;
+            this._rttBindings.write(this._downChannel, Array.from(Uint8Array.from(chunk)), callback);
+        }
+    }
+}
+
+export class RttReadableStream extends readableMixIn(Readable) {
     constructor(rttBindings, serialNumber, upChannelIndex, options = {}) {
         // The constructor expects that the RTT bindings have already called start(),
         // with the same serial number given here.
@@ -18,63 +70,12 @@ export class RttReadableStream extends Readable {
         this._debug = debugRead;
 
         this._rttBindings = rttBindings;
-//         this._rttIsStarted = false;
-//         this._rttCouldNotStart = false;
         this._upChannel = upChannelIndex;
-
-//         rttBindings.start(serialNumber, options, (err)=>{
-//             if (err) {
-//                 this.emit('error', err);
-//                 this._rttCouldNotStart = true;
-//             } else {
-//                 this._rttIsStarted = true;
-//             }
-//         });
-//         this._rttIsStarted = true;
         this._readTimeout = undefined;
     }
-
-    _read(size) {
-//         this._debug('called _read');
-//         if (this._rttIsStarted) {
-            this._rttBindings.read(this._upChannel, size, (err, chars, bytes, i)=>{
-                if (err) {
-                    this._debug('rtt.read returned error', err);
-                    this.emit(err);
-                    this._readTimeout = undefined;
-                } else if (chars.length) {
-                    const unchoked = this.push(chars);
-                    this._debug(`rtt.read returned ${chars.length} characters: ${chars.toString()}, unchoked: ${unchoked} integer 0x${i.toString(16).padStart(8,'0')}`);
-                    this._readTimeout = undefined;
-                } else {
-//                     this._debug(`rtt.read returned 0 characters`);
-                    if (this._readTimeout) {
-                        clearTimeout(this._timeout);
-                    }
-                    this._readTimeout = setTimeout(()=>{this._read(size)}, 5);
-                }
-            });
-//         } else if (this._rttCouldNotStart) {
-//             this.emit('error', 'RTT could not start, reading is not possible.');
-//             // Not calling this.push() here, therefore this Stream will hang up.
-//             // This is the expected behaviour when RTT failed to start.
-//         } else {
-//             // If RTT is not yet started, wait a bit and retry.
-//             setTimeout(this._read.bind(this), 50);
-//         }
-    }
-
-    _destroy(err, callback) {
-        if (this._readTimeout) {
-            clearTimeout(this._timeout);
-        }
-        this._rttBindings.stop(callback);
-    }
-
-//     push(){}
 }
 
-export class RttWritableStream extends Writable {
+export class RttWritableStream extends writableMixIn(Writable) {
     constructor(rttBindings, serialNumber, downChannelIndex, options = {}) {
         super(options);
 
@@ -83,16 +84,14 @@ export class RttWritableStream extends Writable {
 
         this._rttBindings = rttBindings;
         this._downChannel = downChannelIndex;
-
-    }
-
-    _write(chunk, encoding, callback) {
-        this._rttBindings.write(this._downChannel, chunk, callback);
     }
 }
 
-export class RttDuplexStream extends Duplex {
+
+export class RttDuplexStream extends readableMixIn(writableMixIn(Duplex)) {
     constructor(rttBindings, serialNumber, upChannelIndex, downChannelIndex, options = {}) {
+        super(options);
+
         debugDuplex(`Instantiating RttDuplexStream to ${serialNumber}/${upChannelIndex}/${downChannelIndex}`);
 
         this._debug = debugDuplex;
@@ -104,9 +103,9 @@ export class RttDuplexStream extends Duplex {
     }
 }
 
-RttDuplexStream.prototype._read = RttReadableStream.prototype._read;
-RttDuplexStream.prototype._destroy = RttReadableStream.prototype._destroy;
-RttDuplexStream.prototype._write = RttWritableStream.prototype._write;
+// RttDuplexStream.prototype._read = RttReadableStream.prototype._read;
+// RttDuplexStream.prototype._destroy = RttReadableStream.prototype._destroy;
+// RttDuplexStream.prototype._write = RttWritableStream.prototype._write;
 
 
 

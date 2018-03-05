@@ -4,7 +4,7 @@ import bindings from 'bindings';
 import * as temp from 'temp';
 import sander from 'sander';
 
-import {RttReadableStream} from './rtt-streams';
+import {RttReadableStream, RttWritableStream, RttDuplexStream} from './rtt-streams';
 
 
 // Automatically track and cleanup temp files at exit
@@ -56,6 +56,10 @@ export default class Probe{
                     this._rtt = new nRFjprog.RTT();
                     this._rttUpDirection = nRFjprog.UP_DIRECTION;
                     this._rttDownDirection = nRFjprog.DOWN_DIRECTION;
+
+                    /// TODO: Request serial numbers of connected probes and
+                    /// make a sanity check here.
+
                     res(true);
                 });
             });
@@ -63,6 +67,7 @@ export default class Probe{
     }
 
     _promisify(fnName) {
+        // Not using util.promisify here because of a scope hell regarding `this` :-(
         const this$1 = this;
         return function(){
             const args = Array.from(arguments);
@@ -161,7 +166,7 @@ export default class Probe{
     }
 
     getReadableRttStream(channelIndex, streamOptions = {}) {
-        this._startRtt()
+        return this._startRtt()
         .then(assertChannelIndex(channelIndex, this._rttUpDirection))
         .then((validChannelIndex)=>{
             return new RttReadableStream(this._rtt, this._sn, validChannelIndex, streamOptions);
@@ -175,7 +180,7 @@ export default class Probe{
     }
 
     getWritableRttStream(channelIndex, streamOptions = {}) {
-        this._startRtt()
+        return this._startRtt()
         .then(assertChannelIndex(channelIndex, this._rttDownDirection))
         .then((validChannelIndex)=>{
             return new RttWritableStream(this._rtt, this._sn, validChannelIndex, streamOptions);
@@ -189,12 +194,17 @@ export default class Probe{
     }
 
     getDuplexRttStream(upChannelIndex, downChannelIndex, streamOptions = {}) {
-        this._startRtt()
+        return this._startRtt()
         .then((channelInfo)=>Promise.all([
             assertChannelIndex(upChannelIndex, this._rttUpDirection)(channelInfo),
             assertChannelIndex(downChannelIndex, this._rttDownDirection)(channelInfo)
-        ]).then(([validUpChannelIndex, validDownChannelIndex)=>{
-            return new RttWritableStream(this._rtt, this._sn, validUpChannelIndex, validDownChannelIndex, streamOptions);
+        ])).then(([validUpChannelIndex, validDownChannelIndex])=>{
+            return new RttDuplexStream(
+                this._rtt,
+                this._sn,
+                validUpChannelIndex,
+                validDownChannelIndex,
+                streamOptions);
         }).catch(err=>{
             return new Promise((res, rej)=>{
                 this._rtt.stop(()=>{
@@ -204,17 +214,5 @@ export default class Probe{
         });
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
