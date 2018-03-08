@@ -20,8 +20,10 @@ function readableMixIn(BaseClass) {
                         this.emit(err);
                         this._readTimeout = undefined;
                     } else if (chars.length) {
-                        const unchoked = this.push(chars);
-                        this._debug(`rtt.read returned ${chars.length} characters: ${chars.toString()}, unchoked: ${unchoked} integer 0x${i.toString(16).padStart(8,'0')}`);
+                        const typedBytes = Uint8Array.from(bytes);
+                        const unchoked = this.push(typedBytes);
+//                         this._debug(`rtt.read returned ${chars.length} characters: ${chars.toString()} ${typedBytes}, unchoked: ${unchoked} integer 0x${i.toString(16).padStart(8,'0')}`);
+                        this._debug(`rtt.read returned ${chars.length} characters`);
                         this._readTimeout = undefined;
                     } else {
     //                     this._debug(`rtt.read returned 0 characters`);
@@ -54,7 +56,6 @@ function readableMixIn(BaseClass) {
 function writableMixIn(BaseClass) {
     return class extends BaseClass {
         _write(chunk, encoding, callback) {
-//             debugger;
             this._rttBindings.write(this._downChannel, Array.from(Uint8Array.from(chunk)), callback);
         }
     }

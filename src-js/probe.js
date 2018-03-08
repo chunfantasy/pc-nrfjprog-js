@@ -18,15 +18,13 @@ temp.track();
 function assertChannelIndex(channelIndex, direction) {
     return function(channelInfo) {
         for (const i in channelInfo) {
-            if (channelIndex === channelInfo[i].channelIndex){
-    //             if (channelInfo[i].direction !== direction) {
-    //                 throw new Error(`Channel index ${channelIndex} is not an up channel`);
-    //             } else {
+            if (channelIndex === channelInfo[i].channelIndex
+                && channelInfo[i].direction === direction)
+            {
                 return channelIndex;
-    //             }
             }
         }
-        throw new Error(`Channel index ${channelIndex} does not exist`);
+        throw new Error(`Channel index ${channelIndex} for direction ${direction} does not exist`);
     }
 }
 
@@ -134,14 +132,7 @@ export default class Probe{
 
 
     getRttChannels(options = {}){
-        return this._ready.then(()=>{
-            return new Promise((res, rej)=>{
-                this._rtt.start(this._sn, options, (err, channelInfo)=>{
-                    if (err) { rej(err); }
-                    else { res(channelInfo); }
-                })
-            });
-        }).then((channelInfo)=>{
+        return this._startRtt().then((channelInfo)=>{
             return new Promise((res, rej)=>{
                 this._rtt.stop(err=>{
                     if (err) {rej(err);}
@@ -157,9 +148,9 @@ export default class Probe{
         /// TODO: implement RTT options for the start of the RTT block???
         return this._ready.then(()=>{
             return new Promise((res, rej)=>{
-                this._rtt.start(this._sn, {}, (err, channelInfo)=>{
+                this._rtt.start(this._sn, {}, (err, downChannelInfo, upChannelInfo)=>{
                     if (err) { rej(err); }
-                    else { res(channelInfo); }
+                    else { res(downChannelInfo.concat(upChannelInfo)); }
                 })
             });
         });
