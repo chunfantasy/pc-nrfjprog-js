@@ -34,40 +34,131 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import path from 'path';
-import bindings from 'bindings';
+/**
+ *
+ * The <tt>pc-nrfjprog-js</tt> module exposes the functionality to the
+ * nRF5x Command-line tools
+ * to your nodeJS programs.
+ *
+ * @example
+ * let nrfjprogjs = require('pc-nrfjprog-js');
+ *
+ * nrfjprogjs.getConnectedDevices().then(function(devices) {
+ *     console.log('There are ' + devices.length + ' nRF devices connected.');
+ * });
+ *
+ * @module pc-nrfjprog-js
+ */
+
+import path from "path";
+import bindings from "bindings";
 
 // import * as rttStreams from './rtt-streams';
-import Probe from './probe';
+import Probe from "./probe";
 
-const nRFjprog = bindings('pc-nrfjprog-js');
-
+const nRFjprog = bindings("pc-nrfjprog-js");
 
 const instance = new nRFjprog.nRFjprog();
 
 // console.log('nRFjprog instance: ', instance);
 
+Object.keys(nRFjprog).map((key) => {
+    //     console.log('Iterating through: ', key);
 
-Object.keys(nRFjprog).map(key => {
-
-//     console.log('Iterating through: ', key);
-
-    if (key === 'setLibrarySearchPath') {
-        nRFjprog.setLibrarySearchPath(path.join(__dirname, '..', 'nrfjprog', 'lib'));
-    } else if (key !== 'nRFjprog') {
+    if (key === "setLibrarySearchPath") {
+        nRFjprog.setLibrarySearchPath(path.join(__dirname, "..", "nrfjprog", "lib"));
+    } else if (key !== "nRFjprog") {
         instance[key] = nRFjprog[key];
     }
 });
 
+// The loop above maps all function calls from the bindings to the "instance",
+// which used to mean the exported module.
+// However, these are deprecated - only three of them are used now, and their
+// API has changed; as follows:
 
-instance.RTT = new nRFjprog.RTT();
-instance.Probe = Probe;
+/**
+ * Async function to get the version of the nrfjprog library in use.
+ * Returns a `Promise` with the version information.
+ *
+ * @example
+ * nrfjprogjs.getLibraryVersion().then( function(version) {
+ *      // outputs e.g. "9.6.0"
+ *      console.log( version.major + '.' + version.minor + '.' + version.revision );
+ * } );
+ *
+ * @return {Promise<VersionInformation>}
+ */
+export function getLibraryVersion() {
+    return new Promise((resolve, reject) => {
+        instance.getLibraryVersion((err, version) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(version);
+            }
+        });
+    });
+}
 
-// instance.getRttReadStream = rttStreams.getRttReadStream(module.exports.RTT);
-// instance.getRttWriteStream = rttStreams.getRttWriteStream(module.exports.RTT);
-// instance.getRttDuplexStream = rttStreams.getRttDuplexStream(module.exports.RTT);
+/**
+ * Async function to get a list of all connected probes and information about
+ * the device they're probing. Returns a `Promise`
+ * with an `Array` of {@link module:pc-nrfjprog-js~SerialNumberAndDeviceInformation|SerialNumberAndDeviceInformation}).
+ *
+ * @example
+ * nrfjprogjs.getConnectedDevices().then( function(devices) {
+ *      for (let i = 0; i < devices.length; i++) {
+ *          console.log(
+ *              devices[i].serialNumber +
+ *              ' has ' +
+ *              devices[i].deviceInfo.ramSize +
+ *              ' bytes of RAM'
+ *          );
+ *      }
+ * } );
+ *
+ * @return {Promise<Array<ProbeInformation>>}
+ */
+export function getConnectedDevices() {
+    return new Promise((resolve, reject) => {
+        instance.getConnectedDevices((err, devs) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(devs);
+            }
+        });
+    });
+}
+
+/**
+ * Async function to get the serial numbers of all connected probes. Returns
+ * a `Promise` with an `Array` of {integer}.
+ *
+ * @example
+ * nrfjprogjs.getSerialNumbers().then(function(serialNumbers) {
+ *      for (let i = 0; i < serialNumbers.length; i++) {
+ *          console.log(serialNumbers[i]);
+ *      }
+ * } );
+ * @return {Promise<Array<integer>>}
+ */
+export function getSerialNumbers() {
+    return new Promise((resolve, reject) => {
+        instance.getSerialNumbers((err, serialnumbers) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(serialnumbers);
+            }
+        });
+    });
+}
+
+export { Probe };
+
+// TODO: Add the previous API as deprecated exports here.
 
 // console.log('nRFjprog instance: ', instance);
-
-
-export default instance;
+// export default instance;
