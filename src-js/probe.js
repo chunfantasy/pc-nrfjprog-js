@@ -82,7 +82,7 @@ class Probe {
         const this$1 = this;
         return function() {
             const args = Array.from(arguments);
-            //             console.log(args);
+            // console.log(args);
             return this$1._ready.then(() => {
                 return new Promise((res, rej) => {
                     this$1._jprog[fnName](this$1._sn, ...args, (err, data) => {
@@ -360,6 +360,7 @@ class Probe {
     /**
      * Returns a Promise to a readable RTT stream, given the numberic index for
      * an "up" RTT channel.
+     * @see Probe#getRttChannels.
      * @return {Promise<RttReadableStream>}
      */
     getReadableRttStream(channelIndex, streamOptions = {}) {
@@ -387,6 +388,7 @@ class Probe {
     /**
      * Returns a Promise to a writable RTT stream, given the numberic index for
      * a "down" RTT channel.
+     * @see Probe#getRttChannels.
      * @return {Promise<RttWritableStream>}
      */
     getWritableRttStream(channelIndex, streamOptions = {}) {
@@ -414,6 +416,7 @@ class Probe {
     /**
      * Returns a Promise to a duplex (read/write) RTT stream, given the numberic
      * indices for an "up" and a "down" RTT channels.
+     * @see Probe#getRttChannels.
      * @return {Promise<RttDuplexStream>}
      */
     getDuplexRttStream(upChannelIndex, downChannelIndex, streamOptions = {}) {

@@ -36,7 +36,7 @@
 
 'use strict';
 
-const nRFjprog = require('../index.js');
+const nRFjprog = require('../').legacy;
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
 

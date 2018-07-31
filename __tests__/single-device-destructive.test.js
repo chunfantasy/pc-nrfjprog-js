@@ -36,7 +36,7 @@
 
 'use strict';
 
-const nRFjprog = require('../index.js');
+const nRFjprog = require('../').legacy;
 const fs = require('fs');
 
 let device;

@@ -65,7 +65,7 @@ function writableMixIn(BaseClass) {
 
 /**
  * A subclass of {@link https://nodejs.org/api/stream.html#stream_class_stream_readable|stream.Readable}.
- * It can only be instantiated through {@linkcode Probe#getRttReadStream}.
+ * It can only be instantiated through {@linkcode Probe#getReadableRttStream}.
  */
 export class RttReadableStream extends readableMixIn(Readable) {
     constructor(rttBindings, serialNumber, upChannelIndex, options = {}) {
@@ -86,7 +86,7 @@ export class RttReadableStream extends readableMixIn(Readable) {
 
 /**
  * A subclass of {@link https://nodejs.org/api/stream.html#stream_class_stream_writable|stream.Writable}.
- * It can only be instantiated through {@linkcode Probe#getRttWriteStream}.
+ * It can only be instantiated through {@linkcode Probe#getWritableRttStream}.
  */
 export class RttWritableStream extends writableMixIn(Writable) {
     constructor(rttBindings, serialNumber, downChannelIndex, options = {}) {
@@ -104,7 +104,7 @@ export class RttWritableStream extends writableMixIn(Writable) {
 
 /**
  * A subclass of {@link https://nodejs.org/api/stream.html#stream_class_stream_duplex|stream.Duplex}.
- * It can only be instantiated through {@linkcode Probe#getRttDuplexStream}.
+ * It can only be instantiated through {@linkcode Probe#getDuplexRttStream}.
  */
 export class RttDuplexStream extends readableMixIn(writableMixIn(Duplex)) {
     constructor(

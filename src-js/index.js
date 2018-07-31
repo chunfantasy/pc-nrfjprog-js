@@ -59,6 +59,7 @@ import Probe from "./probe";
 const nRFjprog = bindings("pc-nrfjprog-js");
 
 const instance = new nRFjprog.nRFjprog();
+const constants = {};
 
 // console.log('nRFjprog instance: ', instance);
 
@@ -69,8 +70,16 @@ Object.keys(nRFjprog).map((key) => {
         nRFjprog.setLibrarySearchPath(path.join(__dirname, "..", "nrfjprog", "lib"));
     } else if (key !== "nRFjprog") {
         instance[key] = nRFjprog[key];
+        if (nRFjprog[key] instanceof Number) {
+            constants[key] = nRFjprog[key];
+        }
     }
 });
+
+instance.RTT = new nRFjprog.RTT();
+
+Object.freeze(constants);
+Object.freeze(instance);
 
 // The loop above maps all function calls from the bindings to the "instance",
 // which used to mean the exported module.
@@ -104,7 +113,7 @@ export function getLibraryVersion() {
 /**
  * Async function to get a list of all connected probes and information about
  * the device they're probing. Returns a `Promise`
- * with an `Array` of {@link module:pc-nrfjprog-js~SerialNumberAndDeviceInformation|SerialNumberAndDeviceInformation}).
+ * with an `Array` of {@link SerialNumberAndDeviceInformation}).
  *
  * @example
  * nrfjprogjs.getConnectedDevices().then( function(devices) {
@@ -156,9 +165,36 @@ export function getSerialNumbers() {
     });
 }
 
-export { Probe };
 
-// TODO: Add the previous API as deprecated exports here.
+export {
+/**
+ * Reference to the {@linkcode Probe} constructor.
+ *
+ * @example
+ * let nrfjprogjs = require('pc-nrfjprog-js');
+ * let myProbe = new nrfjprogjs.Probe(12345678);
+ */
+    Probe,
 
-// console.log('nRFjprog instance: ', instance);
-// export default instance;
+/**
+ * Plain object containing all the nrfjprog constants.
+ *
+ * @example
+ * if (err.errno === nrfprogjs.constants.CouldNotOpenHexFile) {
+ *      console.error('.hex file not found');
+ * }
+ */
+    constants,
+
+/**
+ * A copy of the older API. Consider this deprecated, use only for upgrading
+ * programs that depend on older versions of this module.
+ *
+ * @example
+ * let oldnrfjprogjs = require('pc-nrfjprog-js').legacy;
+ * oldnrfjprogjs.read(probeSerialNumber, startAddress, length, function(err, data){
+ *    // etc
+ * });
+ */
+    instance as legacy
+};
