@@ -34,74 +34,44 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-'use strict';
+"use strict";
 
-const nRFjprog = require('../').legacy;
+const nRFjprog = require("../");
 
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
 
-describe('Generic functionality', () => {
-    it('gets library version', done => {
-        const callback = (err, version) => {
-            expect(err).toBeUndefined();
-            expect(version).toHaveProperty('major');
-            expect(version).toHaveProperty('minor');
-            expect(version).toHaveProperty('revision');
+describe("Generic functionality", () => {
+    it("gets library version", (done) => {
+        const callback = (version) => {
+            expect(version).toHaveProperty("major");
+            expect(version).toHaveProperty("minor");
+            expect(version).toHaveProperty("revision");
             done();
         };
 
-        nRFjprog.getLibraryVersion(callback);
+        nRFjprog.getLibraryVersion().then(callback);
     });
 
-    it('gets deprecated dll version', done => {
-        const callback = (err, version) => {
-            expect(err).toBeUndefined();
-            expect(version).toHaveProperty('major');
-            expect(version).toHaveProperty('minor');
-            expect(version).toHaveProperty('revision');
-            done();
-        };
-
-        nRFjprog.getDllVersion(callback);
-    });
-
-    it('finds all connected devices', done => {
-        const callback = (err, connectedDevices) => {
-            expect(err).toBeUndefined();
+    it("finds all connected devices", (done) => {
+        const callback = (connectedDevices) => {
             expect(connectedDevices.length).toBeGreaterThanOrEqual(1);
-            expect(connectedDevices[0]).toHaveProperty('serialNumber');
-            expect(connectedDevices[0]).toHaveProperty('deviceInfo');
-            expect(connectedDevices[0]).toHaveProperty('probeInfo');
-            expect(connectedDevices[0]).toHaveProperty('libraryInfo');
+            expect(connectedDevices[0]).toHaveProperty("serialNumber");
+            expect(connectedDevices[0]).toHaveProperty("deviceInfo");
+            expect(connectedDevices[0]).toHaveProperty("probeInfo");
+            expect(connectedDevices[0]).toHaveProperty("libraryInfo");
             done();
         };
 
-        nRFjprog.getConnectedDevices(callback);
+        nRFjprog.getConnectedDevices().then(callback);
     });
 
-    it('finds all connected serialnumbers', done => {
-        const callback = (err, serialNumbers) => {
-            expect(err).toBeUndefined();
+    it("finds all connected serialnumbers", (done) => {
+        const callback = (serialNumbers) => {
             expect(serialNumbers.length).toBeGreaterThanOrEqual(1);
             expect(serialNumbers[0]).toEqual(expect.any(Number));
-
             done();
         };
 
-        nRFjprog.getSerialNumbers(callback);
-    });
-
-    it('throws when too few parameters are sent in', () => {
-        expect(() => { nRFjprog.getLibraryVersion(); }).toThrowErrorMatchingSnapshot();
-    });
-
-    it('throws when too many parameters are sent in', () => {
-        const mockCallback = jest.fn();
-
-        expect(() => { nRFjprog.getLibraryVersion(mockCallback, mockCallback); }).toThrowErrorMatchingSnapshot();
-    });
-
-    it('throws when wrong type of parameters are sent in', () => {
-        expect(() => { nRFjprog.getLibraryVersion(1); }).toThrowErrorMatchingSnapshot();
+        nRFjprog.getSerialNumbers().then(callback);
     });
 });

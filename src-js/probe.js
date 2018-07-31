@@ -71,6 +71,9 @@ class Probe {
                         /// TODO: Request serial numbers of connected probes and
                         /// make a sanity check here.
 
+                        /// TODO: Keep the connection open. Maybe add a constructor
+                        /// parameter for this??
+
                         res(true);
                     });
             });

@@ -36,35 +36,37 @@
 
 'use strict';
 
-const nRFjprog = require('../');
+const nRFjprog = require('../').legacy;
 
 let device;
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
 
 describe('Single device - non-destructive', () => {
     beforeAll(done => {
-        const callback = (connectedDevices) => {
+        const callback = (err, connectedDevices) => {
+            expect(err).toBeUndefined();
             expect(connectedDevices.length).toBeGreaterThanOrEqual(1);
             device = connectedDevices[0];
 
             done();
         };
 
-        nRFjprog.getConnectedDevices().then(callback);
+        nRFjprog.getConnectedDevices(callback);
     });
 
     it('finds correct device info', done => {
-        const callback = (deviceInfo) => {
+        const callback = (err, deviceInfo) => {
+            expect(err).toBeUndefined();
             expect(deviceInfo).toMatchObject(device.deviceInfo);
             done();
         };
 
-        let probe = new nRFjprog.Probe(device.serialNumber);
-        probe.getDeviceInfo().then(callback);
+        nRFjprog.getDeviceInfo(device.serialNumber, callback);
     });
 
     it('finds correct probe info', done => {
-        const callback = (probeInfo) => {
+        const callback = (err, probeInfo) => {
+            expect(err).toBeUndefined();
             expect(probeInfo).toMatchObject(device.probeInfo);
             expect(probeInfo).toHaveProperty('serialNumber');
             expect(probeInfo).toHaveProperty('clockSpeedkHz');
@@ -72,12 +74,12 @@ describe('Single device - non-destructive', () => {
             done();
         };
 
-        let probe = new nRFjprog.Probe(device.serialNumber);
-        probe.getProbeInfo().then(callback);
+        nRFjprog.getProbeInfo(device.serialNumber, callback);
     });
 
     it('finds correct library info', done => {
-        const callback = (libraryInfo) => {
+        const callback = (err, libraryInfo) => {
+            expect(err).toBeUndefined();
             expect(libraryInfo).toMatchObject(device.libraryInfo);
             expect(libraryInfo).toHaveProperty('version');
             expect(libraryInfo.version).toHaveProperty('major');
@@ -87,63 +89,120 @@ describe('Single device - non-destructive', () => {
             done();
         };
 
-        let probe = new nRFjprog.Probe(device.serialNumber);
-        probe.getLibraryInfo().then(callback);
+        nRFjprog.getLibraryInfo(device.serialNumber, callback);
     });
 
     it('throws an error when device do not exist', done => {
-        const callback = (err) => {
+        const callback = (err, deviceInfo) => {
             expect(err).toMatchSnapshot();
+            expect(deviceInfo).toBeUndefined();
             done();
         };
 
-        let probe = new nRFjprog.Probe(1);
-        probe.getDeviceInfo().catch(callback);
+        nRFjprog.getDeviceInfo(1, callback);
     });
 
     it('reads from specified address', done => {
-        const callback = (contents) => {
+        const callback = (err, contents) => {
+            expect(err).toBeUndefined();
             expect(contents).toBeDefined();
             done();
         };
 
-        let probe = new nRFjprog.Probe(device.serialNumber);
-        probe.read(0x0, 1).then(callback);
+        nRFjprog.read(device.serialNumber, 0x0, 1, callback);
     });
 
     it('reads 5 bytes from specified address', done => {
         const readLength = 5;
 
-        const callback = (contents) => {
+        const callback = (err, contents) => {
+            expect(err).toBeUndefined();
             expect(contents).toBeDefined();
             expect(contents.length).toBe(readLength);
             done();
         };
 
-        let probe = new nRFjprog.Probe(device.serialNumber);
-        probe.read(0x0, readLength).then(callback);
+        nRFjprog.read(device.serialNumber, 0x0, readLength, callback);
     });
 
     it('reads unsigned 32 from specified address', done => {
-        const callback = (contents) => {
+        const callback = (err, contents) => {
+            expect(err).toBeUndefined();
             expect(contents).toBeDefined();
             done();
         };
 
-        let probe = new nRFjprog.Probe(device.serialNumber);
-        probe.readU32(0x0).then(callback);
+        nRFjprog.readU32(device.serialNumber, 0x0, callback);
+    });
+
+    it('keeps connection open when using open/close', done => {
+        const readLength = 10;
+
+        const callback = (err, contents) => {
+            expect(err).toBeUndefined();
+            nRFjprog.close(device.serialNumber, (err) => {
+                expect(err).toBeUndefined();
+                expect(contents.length).toBe(readLength);
+                done();
+            });
+        };
+
+        nRFjprog.open(device.serialNumber, (err) => {
+            expect(err).toBeUndefined();
+            nRFjprog.read(device.serialNumber, 0x0, readLength, callback);
+        });
+    });
+
+    /// FIXME!!!
+    it.skip('calling open twice returns an error', done => {
+        nRFjprog.open(device.serialNumber, (err) => {
+            expect(err).toBeUndefined();
+            nRFjprog.open(device.serialNumber, (err) => {
+                expect(err).toBeDefined();
+                done();
+            });
+        });
+    });
+
+    it('should be able to reopen after close', done => {
+        nRFjprog.open(device.serialNumber, (err) => {
+            expect(err).toBeUndefined();
+            nRFjprog.close(device.serialNumber, (err) => {
+                expect(err).toBeUndefined();
+                nRFjprog.open(device.serialNumber, (err) => {
+                    expect(err).toBeUndefined();
+                    nRFjprog.close(device.serialNumber, (err) => {
+                        expect(err).toBeUndefined();
+                        done();
+                    });
+                });
+            });
+        });
+    });
+
+    it('calling close twice has no effect', done => {
+        nRFjprog.open(device.serialNumber, (err) => {
+            expect(err).toBeUndefined();
+            nRFjprog.close(device.serialNumber, (err) => {
+                expect(err).toBeUndefined();
+                nRFjprog.close(device.serialNumber, (err) => {
+                    expect(err).toBeUndefined();
+                    done();
+                });
+            });
+        });
     });
 
     it('reads more than 0x10000 bytes', done => {
         const readLength = 0x10004;
 
-        const callback = (contents) => {
+        const callback = (err, contents) => {
+            expect(err).toBeUndefined();
             expect(contents).toBeDefined();
             expect(contents.length).toBe(readLength);
             done();
         };
 
-        let probe = new nRFjprog.Probe(device.serialNumber);
-        probe.read(0x0, readLength).then(callback);
+        nRFjprog.read(device.serialNumber, 0x0, readLength, callback);
     });
 });

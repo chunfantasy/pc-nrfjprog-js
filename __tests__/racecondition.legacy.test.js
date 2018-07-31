@@ -36,7 +36,7 @@
 
 'use strict';
 
-const nRFjprog = require('../');
+const nRFjprog = require('../').legacy;
 
 let device;
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
@@ -77,16 +77,25 @@ describe('Handles race conditions gracefully', () => {
     });
 
     it('returns an error when attempting 5 programs in a row', done => {
-        let probe = new nRFjprog.Probe(device.serialNumber);
+        let errorCount = 0;
+        const programAttempts = 5;
+        let callbackCalled = 0;
 
-        Promise.all(
-            (new Array(5)).map(()=>{
-                probe.program("./__tests__/hex/connectivity_1.1.0_1m_with_s132_3.0.hex");
-            });
-        ).catch((err)=>{
-            expect(err).toBeDefined();
-            done();
-        });
+        const programCallback = (err) => {
+            if (err) {
+                errorCount++;
+            }
 
+            callbackCalled++;
+
+            if (callbackCalled === programAttempts) {
+                expect(errorCount).toBeGreaterThan(0);
+                done();
+            }
+        };
+
+        for(let i = 0; i < programAttempts; i++) {
+            nRFjprog.program(device.serialNumber, "./__tests__/hex/connectivity_1.1.0_1m_with_s132_3.0.hex", { }, programCallback);
+        }
     });
 });

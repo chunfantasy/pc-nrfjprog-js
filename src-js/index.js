@@ -165,36 +165,33 @@ export function getSerialNumbers() {
     });
 }
 
-
 export {
-/**
- * Reference to the {@linkcode Probe} constructor.
- *
- * @example
- * let nrfjprogjs = require('pc-nrfjprog-js');
- * let myProbe = new nrfjprogjs.Probe(12345678);
- */
+    /**
+     * Reference to the {@linkcode Probe} constructor.
+     *
+     * @example
+     * let nrfjprogjs = require('pc-nrfjprog-js');
+     * let myProbe = new nrfjprogjs.Probe(12345678);
+     */
     Probe,
-
-/**
- * Plain object containing all the nrfjprog constants.
- *
- * @example
- * if (err.errno === nrfprogjs.constants.CouldNotOpenHexFile) {
- *      console.error('.hex file not found');
- * }
- */
+    /**
+     * Plain object containing all the nrfjprog constants.
+     *
+     * @example
+     * if (err.errno === nrfprogjs.constants.CouldNotOpenHexFile) {
+     *      console.error('.hex file not found');
+     * }
+     */
     constants,
-
-/**
- * A copy of the older API. Consider this deprecated, use only for upgrading
- * programs that depend on older versions of this module.
- *
- * @example
- * let oldnrfjprogjs = require('pc-nrfjprog-js').legacy;
- * oldnrfjprogjs.read(probeSerialNumber, startAddress, length, function(err, data){
- *    // etc
- * });
- */
-    instance as legacy
+    /**
+     * A copy of the older API. Consider this deprecated, use only for upgrading
+     * programs that depend on older versions of this module.
+     *
+     * @example
+     * let oldnrfjprogjs = require('pc-nrfjprog-js').legacy;
+     * oldnrfjprogjs.read(probeSerialNumber, startAddress, length, function(err, data){
+     *    // etc
+     * });
+     */
+    instance as legacy,
 };

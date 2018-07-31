@@ -36,57 +36,72 @@
 
 'use strict';
 
-const nRFjprog = require('../');
+const nRFjprog = require('../').legacy;
 
-let device;
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 100000;
 
-describe('Handles race conditions gracefully', () => {
-    beforeAll(done => {
+describe('Generic functionality', () => {
+    it('gets library version', done => {
+        const callback = (err, version) => {
+            expect(err).toBeUndefined();
+            expect(version).toHaveProperty('major');
+            expect(version).toHaveProperty('minor');
+            expect(version).toHaveProperty('revision');
+            done();
+        };
+
+        nRFjprog.getLibraryVersion(callback);
+    });
+
+    it('gets deprecated dll version', done => {
+        const callback = (err, version) => {
+            expect(err).toBeUndefined();
+            expect(version).toHaveProperty('major');
+            expect(version).toHaveProperty('minor');
+            expect(version).toHaveProperty('revision');
+            done();
+        };
+
+        nRFjprog.getDllVersion(callback);
+    });
+
+    it('finds all connected devices', done => {
         const callback = (err, connectedDevices) => {
             expect(err).toBeUndefined();
             expect(connectedDevices.length).toBeGreaterThanOrEqual(1);
-            device = connectedDevices[0];
+            expect(connectedDevices[0]).toHaveProperty('serialNumber');
+            expect(connectedDevices[0]).toHaveProperty('deviceInfo');
+            expect(connectedDevices[0]).toHaveProperty('probeInfo');
+            expect(connectedDevices[0]).toHaveProperty('libraryInfo');
             done();
         };
 
         nRFjprog.getConnectedDevices(callback);
     });
 
-    it('allows multiple, fast, calls in a row', done => {
-        let errorCount = 0;
-        const getVersionAttempts = 50;
-        let callbackCalled = 0;
+    it('finds all connected serialnumbers', done => {
+        const callback = (err, serialNumbers) => {
+            expect(err).toBeUndefined();
+            expect(serialNumbers.length).toBeGreaterThanOrEqual(1);
+            expect(serialNumbers[0]).toEqual(expect.any(Number));
 
-        const getVersionCallback = (err) => {
-            if (err) {
-                errorCount++;
-            }
-
-            callbackCalled++;
-
-            if (callbackCalled === getVersionAttempts) {
-                expect(errorCount).toBe(0);
-                done();
-            }
+            done();
         };
 
-        for(let i = 0; i < getVersionAttempts; i++) {
-            nRFjprog.getLibraryVersion(getVersionCallback);
-        }
+        nRFjprog.getSerialNumbers(callback);
     });
 
-    it('returns an error when attempting 5 programs in a row', done => {
-        let probe = new nRFjprog.Probe(device.serialNumber);
+    it('throws when too few parameters are sent in', () => {
+        expect(() => { nRFjprog.getLibraryVersion(); }).toThrowErrorMatchingSnapshot();
+    });
 
-        Promise.all(
-            (new Array(5)).map(()=>{
-                probe.program("./__tests__/hex/connectivity_1.1.0_1m_with_s132_3.0.hex");
-            });
-        ).catch((err)=>{
-            expect(err).toBeDefined();
-            done();
-        });
+    it('throws when too many parameters are sent in', () => {
+        const mockCallback = jest.fn();
 
+        expect(() => { nRFjprog.getLibraryVersion(mockCallback, mockCallback); }).toThrowErrorMatchingSnapshot();
+    });
+
+    it('throws when wrong type of parameters are sent in', () => {
+        expect(() => { nRFjprog.getLibraryVersion(1); }).toThrowErrorMatchingSnapshot();
     });
 });
