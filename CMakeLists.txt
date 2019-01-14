@@ -50,6 +50,8 @@ set_target_properties(${PROJECT_NAME}
 )
 
 if(WIN32)
+    # suppress C4251 and C4275 v8/msvc related warning, for more info: https://github.com/nodejs/node/pull/15570
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /wd4251 /wd4275")
     set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_DEFINITIONS "_CRT_SECURE_NO_WARNINGS")
 elseif(APPLE)
     target_link_libraries(${PROJECT_NAME} "-framework CoreFoundation")
